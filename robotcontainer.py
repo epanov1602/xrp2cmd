@@ -1,0 +1,97 @@
+#
+# Copyright (c) FIRST and other WPILib contributors.
+# Open Source Software; you can modify and/or share it under the terms of
+# the WPILib BSD license file in the root directory of this project.
+#
+
+import typing
+
+import wpilib
+import commands2
+from commands2.button import CommandXboxController, CommandJoystick
+
+from commands.arcadedrive import ArcadeDrive
+from commands.drivedistance import DriveDistance
+from commands.rotateangle import RotateAngle
+
+from subsystems.drivetrain import Drivetrain
+from subsystems.arm import Arm
+
+class RobotContainer:
+    """
+    This class is where the bulk of the robot should be declared. Since Command-based is a
+    "declarative" paradigm, very little robot logic should actually be handled in the :class:`.Robot`
+    periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+    subsystems, commands, and button mappings) should be declared here.
+    """
+
+    def __init__(self):
+        # The robot's subsystems are defined here
+        self.drivetrain = Drivetrain()
+        self.arm = Arm()
+
+        # Assume that joystick "j0" is plugged into channnel 0
+        self.j0 = CommandXboxController(0)
+        # (you can also use CommandPS4Controller or CommandJoystick, if you prefer those)
+
+        self.configureButtonBindings()
+
+    def configureButtonBindings(self):
+        """Use this method to define your button->command mappings"""
+
+        # 1. Here is a command to drive forward 10 inches with speed 0.9
+        forward10inches = DriveDistance(speed=0.9, inches=10, drivetrain=self.drivetrain)
+        # let's bind this command to button "y" on the joystick
+        self.j0.y().onTrue(forward10inches)
+
+        # 2. Here is a command to drive back 10 inches with speed 0.5
+        back10inches = DriveDistance(speed=-0.7, inches=10, drivetrain=self.drivetrain)
+        #  - exercise B1: can you hook this command to button "a" on the joystick?
+        self.j0.a().onTrue(back10inches)
+
+        # 3. Instant commands (commands that just do one thing instantly)
+        reset_coordinates = commands2.InstantCommand(lambda: self.drivetrain.resetOdometry())
+        self.j0.povUp().onTrue(reset_coordinates)
+
+        # So simple that they don't need to be written as separate modules in commands/ directory.
+        arm_up = commands2.InstantCommand(lambda: self.arm.setAngle(90))
+        # - bind it to button "x" pressed
+        self.j0.x().onTrue(arm_up)
+
+        # a command for "arm down" can bind to button x "unpressed" ???
+        arm_down = commands2.InstantCommand(lambda: self.arm.setAngle(0))
+        # yes! to bind to "unpressed" event, you need to use "onFalse()"
+        self.j0.x().onFalse(arm_down)
+
+        # 4. A command to turn right 45 degrees *but* we can add a 5 second timeout to it
+        right45degrees = RotateAngle(speed=0.5, degrees=45, drivetrain=self.drivetrain)
+        right45degrees_max5s = right45degrees.withTimeout(5)
+        self.j0.rightBumper().onTrue(right45degrees_max5s)
+
+        left45degrees = RotateAngle(speed=-0.5, degrees=45, drivetrain=self.drivetrain)
+        self.j0.leftBumper().onTrue(left45degrees)
+
+        forward8inches1 = DriveDistance(speed=0.7, inches=8, drivetrain=self.drivetrain)
+        right90degrees1 = RotateAngle(speed=0.5, degrees=90, drivetrain=self.drivetrain)
+        forward8inches2 = DriveDistance(speed=0.7, inches=8, drivetrain=self.drivetrain)
+        right90degrees2 = RotateAngle(speed=0.5, degrees=90, drivetrain=self.drivetrain)
+        half_square = forward8inches1.andThen(right90degrees1).andThen(forward8inches2).andThen(right90degrees2)
+        self.j0.b().onTrue(half_square)
+
+        # 3. Finally, a command to take input from joystick *later* ("lambda" = later)
+        # and drive using that input as control speed signal
+        drive = ArcadeDrive(
+            self.drivetrain,
+            lambda: -self.j0.getRawAxis(1),  # minus sign, because Xbox stick pushed forward is negative axis value
+            lambda: self.j0.getRawAxis(0),
+        )
+        # This command will be running *by default* on drivetrain
+        # ("by default" means it will stop running when some other command is asked
+        # to use drivetrain, and will restart running after that other command is done)
+        self.drivetrain.setDefaultCommand(drive)
+
+    def getAutonomousCommand(self):
+        # - exercise B1: can you make a command to drive 20 inches forward at max speed?
+
+        # - exercise B2: can you return this command instead of None?
+        return None
