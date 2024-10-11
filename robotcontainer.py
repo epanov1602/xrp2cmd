@@ -44,41 +44,56 @@ class RobotContainer:
         # let's bind this command to button "y" on the joystick
         self.j0.y().onTrue(forward10inches)
 
-        # 2. Here is a command to drive back 10 inches with speed 0.5
+        # and here is a command to drive back 10 inches
         back10inches = DriveDistance(speed=-0.7, inches=10, drivetrain=self.drivetrain)
-        #  - exercise B1: can you hook this command to button "a" on the joystick?
-        self.j0.a().onTrue(back10inches)
+
+        #  - exercise 1: can you hook this command to button "a" on the joystick?
+
+
 
         # 3. Instant commands (commands that just do one thing instantly)
-        reset_coordinates = commands2.InstantCommand(lambda: self.drivetrain.resetOdometry())
-        self.j0.povUp().onTrue(reset_coordinates)
+        # normally, simple one-shot commands that don't need to be written as separate modules in commands/ directory
 
-        # So simple that they don't need to be written as separate modules in commands/ directory.
+        # "lambda" really means "do this later when that command needs to run"
         arm_up = commands2.InstantCommand(lambda: self.arm.setAngle(90))
-        # - bind it to button "x" pressed
-        self.j0.x().onTrue(arm_up)
+        self.j0.x().onTrue(arm_up)  # - bind it to button "x" pressed
 
         # a command for "arm down" can bind to button x "unpressed" ???
         arm_down = commands2.InstantCommand(lambda: self.arm.setAngle(0))
-        # yes! to bind to "unpressed" event, you need to use "onFalse()"
+        # yes! we can bind it to "button unpressed" event, if we use "onFalse()"
         self.j0.x().onFalse(arm_down)
 
+        #  - exercise 3: can you make an "arm half up" (45 degrees) command and bind it to "B button pressed"?
+
+        # (and is anything missing?)
+
+
         # 4. A command to turn right 45 degrees *but* we can add a 5 second timeout to it
-        right45degrees = RotateAngle(speed=0.5, degrees=45, drivetrain=self.drivetrain)
+        right45degrees = RotateAngle(speed=0.6, degrees=45, drivetrain=self.drivetrain)
         right45degrees_max5s = right45degrees.withTimeout(5)
         self.j0.rightBumper().onTrue(right45degrees_max5s)
 
-        left45degrees = RotateAngle(speed=-0.5, degrees=45, drivetrain=self.drivetrain)
-        self.j0.leftBumper().onTrue(left45degrees)
+        # exercise 4: can you make a command to turn the robot left by 45 degrees and with 3 second timeout?
 
+        # exercise 4b: can you bind this command to the left bumper button of the joystick?
+
+
+        # 5. Connecting commands together: making a half square
         forward8inches1 = DriveDistance(speed=0.7, inches=8, drivetrain=self.drivetrain)
         right90degrees1 = RotateAngle(speed=0.5, degrees=90, drivetrain=self.drivetrain)
         forward8inches2 = DriveDistance(speed=0.7, inches=8, drivetrain=self.drivetrain)
         right90degrees2 = RotateAngle(speed=0.5, degrees=90, drivetrain=self.drivetrain)
         half_square = forward8inches1.andThen(right90degrees1).andThen(forward8inches2).andThen(right90degrees2)
-        self.j0.b().onTrue(half_square)
+        self.j0.povDown().onTrue(half_square)
 
-        # 3. Finally, a command to take input from joystick *later* ("lambda" = later)
+        # exercise 5: can you actually change the code above to make it a full square?
+
+
+        # 6. A little helper instant command to reset the robot coordinates in SmartDashboard
+        reset_coordinates = commands2.InstantCommand(lambda: self.drivetrain.resetOdometry())
+        self.j0.povUp().onTrue(reset_coordinates)
+
+        # 7. Finally, a command to take input from joystick *later* ("lambda" = later)
         # and drive using that input as control speed signal
         drive = ArcadeDrive(
             self.drivetrain,
