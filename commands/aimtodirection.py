@@ -12,13 +12,14 @@ from subsystems.drivetrain import Drivetrain
 from wpimath.geometry import Rotation2d
 
 class AimToDirectionConstants:
-    kPRotate = 0.3
+    kPRotate = 0.03
     kMinTurnSpeed = 0.2  # turning slower than this is unproductive
     kAngleToleranceDegrees = 5.0  # plus minus 5 degrees is ok
 
 class AimToDirection(commands2.Command):
-    def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain) -> None:
+    def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, maxspeed: float = 1) -> None:
         self.targetDegrees = degrees
+        self.maxSpeed = min((1.0, abs(maxspeed)))
         self.targetDirection = None
         self.drivetrain = drivetrain
         self.addRequirements(drivetrain)
@@ -39,8 +40,8 @@ class AimToDirection(commands2.Command):
         turnSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
         if turnSpeed < AimToDirectionConstants.kMinTurnSpeed:
             turnSpeed = AimToDirectionConstants.kMinTurnSpeed  # but not too small
-        if turnSpeed > 1:
-            turnSpeed = 1  # and not above 1.0
+        if turnSpeed > self.maxSpeed:
+            turnSpeed = self.maxSpeed  # and not above maxSpeed
 
         # 3. act on it! if target angle is on the right, turn right
         if degreesRemaining > 0:

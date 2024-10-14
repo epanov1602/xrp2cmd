@@ -13,7 +13,7 @@ from commands.aimtodirection import AimToDirectionConstants
 from wpimath.geometry import Rotation2d, Translation2d
 
 class GoToPointConstants:
-    kPTranslate = 0.3
+    kPTranslate = 0.1
     kMinTranslateSpeed = 0.2  # moving forward slower than this is unproductive
     kOversteerAdjustment = 0.5
 
@@ -34,17 +34,18 @@ class GoToPoint(commands2.Command):
     def execute(self):
         # 1. to which direction we should be pointing?
         currentPose = self.drivetrain.getPose()
-        currentDirection = currentPose.getHeading()
+        currentDirection = currentPose.rotation()
         currentPoint = currentPose.translation()
-        targetDirection = Rotation2d(self.targetPosition - currentPoint)
-        degreesRemaining = (Rotation2d(targetDirection) - currentDirection).degrees()
+        targetDirection = self.targetPosition - currentPoint
+        targetDirection = Rotation2d(targetDirection.x, targetDirection.y)
+        degreesRemaining = (targetDirection - currentDirection).degrees()
 
         # 2. apply the oversteer adjustment to the direction?
         if abs(degreesRemaining) < 45 and GoToPointConstants.kOversteerAdjustment != 0:
             deviationFromInitial = (targetDirection - self.initialDirection).degrees()
             adjustment = Rotation2d.fromDegrees(GoToPointConstants.kOversteerAdjustment * deviationFromInitial)
             targetDirection = targetDirection.rotateBy(adjustment)
-            degreesRemaining = (Rotation2d(targetDirection) - currentDirection).degrees()
+            degreesRemaining = (targetDirection - currentDirection).degrees()
 
         # 3. now when we know the desired direction, we can compute the turn speed
         rotateSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
@@ -65,7 +66,7 @@ class GoToPoint(commands2.Command):
         distanceRemaining = self.targetPosition.distance(currentPoint)
         translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining
         if translateSpeed < GoToPointConstants.kMinTranslateSpeed:
-            rotateSpeed = GoToPointConstants.kMinTranslateSpeed
+            translateSpeed = GoToPointConstants.kMinTranslateSpeed
         if translateSpeed > 1:
             translateSpeed = 1
 
