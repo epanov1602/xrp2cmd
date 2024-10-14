@@ -7,7 +7,6 @@
 import commands2
 
 from subsystems.drivetrain import Drivetrain
-import wpilib
 
 class RotateAngle(commands2.Command):
     def __init__(self, speed: float, degrees: float, drivetrain: Drivetrain) -> None:

@@ -50,7 +50,6 @@ class RobotContainer:
         #  - exercise 1: can you hook this command to button "a" on the joystick?
 
 
-
         # 3. Instant commands (commands that just do one thing instantly)
         # normally, simple one-shot commands that don't need to be written as separate modules in commands/ directory
 
@@ -69,9 +68,6 @@ class RobotContainer:
 
 
         # 4. A command to turn right 45 degrees *but* we can add a 5 second timeout to it
-        right45degrees = RotateAngle(speed=0.6, degrees=45, drivetrain=self.drivetrain)
-        right45degrees_max5s = right45degrees.withTimeout(5)
-        self.j0.rightBumper().onTrue(right45degrees_max5s)
 
         # exercise 4: can you make a command to turn the robot left by 45 degrees and with 3 second timeout?
 
@@ -110,3 +106,6 @@ class RobotContainer:
 
         # - exercise B2: can you return this command instead of None?
         return None
+
+    def teleopInit(self):
+        self.drivetrain.resetOdometry()

@@ -66,14 +66,15 @@ class Drivetrain(commands2.Subsystem):
         SmartDashboard.putNumber("z-heading", pose.rotation().degrees())
 
 
-    def arcadeDrive(self, fwd: float, rot: float) -> None:
+    def arcadeDrive(self, fwd: float, rot: float, square: bool = False) -> None:
         """
         Drives the robot using arcade controls.
 
         :param fwd: the commanded forward movement
         :param rot: the commanded rotation
+        :param square: make the inputs a little smoother around zero (helps human operators)
         """
-        self.drive.arcadeDrive(fwd, -rot)
+        self.drive.arcadeDrive(fwd, -rot, square)
 
     def stop(self) -> None:
         """

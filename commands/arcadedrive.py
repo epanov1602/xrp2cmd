@@ -32,5 +32,5 @@ class ArcadeDrive(commands2.Command):
         self.addRequirements(self.drive)
 
     def execute(self) -> None:
-        self.drive.arcadeDrive(self.forward(), self.rotation())
+        self.drive.arcadeDrive(self.forward(), self.rotation(), square=True)
     
