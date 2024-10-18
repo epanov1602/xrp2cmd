@@ -47,10 +47,10 @@ class AimToDirection(commands2.Command):
         # 3. act on it! if target angle is on the right, turn right
         if degreesRemaining > 0:
             self.drivetrain.arcadeDrive(0.0, turnSpeed)
-            print(f"{degreesRemaining} degrees remaining, {turnSpeed} turn speed")
+            print(f"AimToDirection: {degreesRemaining} degrees remaining, {turnSpeed} turn speed")
         else:
             self.drivetrain.arcadeDrive(0.0, -turnSpeed)  # otherwise, turn left
-            print(f"{degreesRemaining} degrees remaining, {-turnSpeed} turn speed")
+            print(f"AimToDirection: {degreesRemaining} degrees remaining, {-turnSpeed} turn speed")
 
     def end(self, interrupted: bool):
         self.drivetrain.arcadeDrive(0, 0)
@@ -62,6 +62,7 @@ class AimToDirection(commands2.Command):
         # if we are pretty close to the direction we wanted, consider the command finished
         if abs(degreesRemaining) < AimToDirectionConstants.kAngleToleranceDegrees:
             turnVelocity = self.drivetrain.getGyroVelocityZ()
-            print(f"stopping velocity {turnVelocity}")
+            print(f"AimToDirection: possible stopping velocity {turnVelocity}")
             if abs(turnVelocity) < AimToDirectionConstants.kAngleVelocityToleranceDegreesPerSec:
+                print(f"AimToDirection: finished with {turnVelocity}")
                 return True
