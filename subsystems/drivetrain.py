@@ -74,7 +74,7 @@ class Drivetrain(commands2.Subsystem):
         :param rot: the commanded rotation
         :param square: make the inputs a little smoother around zero (helps human operators)
         """
-        self.drive.arcadeDrive(fwd, -rot, square)
+        self.drive.arcadeDrive(fwd, rot, square)
 
     def stop(self) -> None:
         """
@@ -123,6 +123,13 @@ class Drivetrain(commands2.Subsystem):
         :returns: The acceleration of the XRP along the Z-axis in Gs
         """
         return self.accelerometer.getZ()
+
+    def getGyroVelocityZ(self) -> float:
+        """The angular velocity in the Z-axis.
+
+        :returns: The acceleration of the XRP along the Z-axis in Gs
+        """
+        return self.gyro.getRateZ()
 
     def getGyroAngleX(self) -> float:
         """Current angle of the XRP around the X-axis.

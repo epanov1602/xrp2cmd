@@ -8,7 +8,7 @@ import typing
 
 import wpilib
 import commands2
-from commands2.button import CommandXboxController, CommandJoystick
+from commands2.button import CommandXboxController
 
 from commands.arcadedrive import ArcadeDrive
 from commands.drivedistance import DriveDistance
@@ -16,6 +16,9 @@ from commands.rotateangle import RotateAngle
 
 from subsystems.drivetrain import Drivetrain
 from subsystems.arm import Arm
+
+from commands.aimtodirection import AimToDirection
+from commands.gotopoint import GoToPoint
 
 class RobotContainer:
     """
@@ -97,7 +100,7 @@ class RobotContainer:
         drive = ArcadeDrive(
             self.drivetrain,
             lambda: -self.j0.getRawAxis(1),  # minus sign, because Xbox stick pushed forward is negative axis value
-            lambda: self.j0.getRawAxis(0),
+            lambda: -self.j0.getRawAxis(0),
         )
         # This command will be running *by default* on drivetrain
         # ("by default" means it will stop running when some other command is asked

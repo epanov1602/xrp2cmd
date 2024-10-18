@@ -13,13 +13,14 @@ from commands.aimtodirection import AimToDirectionConstants
 from wpimath.geometry import Rotation2d, Translation2d
 
 class GoToPointConstants:
-    kPTranslate = 0.1
-    kMinTranslateSpeed = 0.2  # moving forward slower than this is unproductive
+    kPTranslate = 0.04
+    kMinTranslateSpeed = 0.3  # moving forward slower than this is unproductive
     kOversteerAdjustment = 0.5
 
 class GoToPoint(commands2.Command):
-    def __init__(self, x: float, y: float, drivetrain: Drivetrain) -> None:
+    def __init__(self, x: float, y: float, drivetrain: Drivetrain, stopAtEnd: bool = True) -> None:
         self.targetPosition = Translation2d(x, y)
+        self.stopAtEnd = stopAtEnd
         self.initialDirection = None
         self.initialDistance = None
         self.drivetrain = drivetrain
@@ -64,7 +65,10 @@ class GoToPoint(commands2.Command):
 
         # 5. but if not too different, then we can drive while turning
         distanceRemaining = self.targetPosition.distance(currentPoint)
-        translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining
+        if not self.stopAtEnd:
+            translateSpeed = 1  # if we don't plan to stop at the end, go at max speed
+        else:
+            translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining  # else, proportional
         if translateSpeed < GoToPointConstants.kMinTranslateSpeed:
             translateSpeed = GoToPointConstants.kMinTranslateSpeed
         if translateSpeed > 1:

@@ -12,9 +12,10 @@ from subsystems.drivetrain import Drivetrain
 from wpimath.geometry import Rotation2d
 
 class AimToDirectionConstants:
-    kPRotate = 0.03
-    kMinTurnSpeed = 0.2  # turning slower than this is unproductive
-    kAngleToleranceDegrees = 5.0  # plus minus 5 degrees is ok
+    kPRotate = 0.002
+    kMinTurnSpeed = 0.3  # turning slower than this is unproductive
+    kAngleToleranceDegrees = 8.0  # plus minus 8 degrees is "close enough" (for XRP)
+    kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
 
 class AimToDirection(commands2.Command):
     def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, maxspeed: float = 1) -> None:
@@ -46,8 +47,10 @@ class AimToDirection(commands2.Command):
         # 3. act on it! if target angle is on the right, turn right
         if degreesRemaining > 0:
             self.drivetrain.arcadeDrive(0.0, turnSpeed)
+            print(f"{degreesRemaining} degrees remaining, {turnSpeed} turn speed")
         else:
             self.drivetrain.arcadeDrive(0.0, -turnSpeed)  # otherwise, turn left
+            print(f"{degreesRemaining} degrees remaining, {-turnSpeed} turn speed")
 
     def end(self, interrupted: bool):
         self.drivetrain.arcadeDrive(0, 0)
@@ -58,4 +61,7 @@ class AimToDirection(commands2.Command):
         degreesRemaining = rotationRemaining.degrees()
         # if we are pretty close to the direction we wanted, consider the command finished
         if abs(degreesRemaining) < AimToDirectionConstants.kAngleToleranceDegrees:
-            return True
+            turnVelocity = self.drivetrain.getGyroVelocityZ()
+            print(f"stopping velocity {turnVelocity}")
+            if abs(turnVelocity) < AimToDirectionConstants.kAngleVelocityToleranceDegreesPerSec:
+                return True
