@@ -9,6 +9,7 @@ import typing
 import wpilib
 import commands2
 from commands2.button import CommandXboxController
+from commands2 import InstantCommand
 
 from commands.arcadedrive import ArcadeDrive
 from commands.drivedistance import DriveDistance
@@ -16,6 +17,7 @@ from commands.rotateangle import RotateAngle
 
 from subsystems.drivetrain import Drivetrain
 from subsystems.arm import Arm
+from subsystems.stopwatch import Stopwatch
 
 from commands.aimtodirection import AimToDirection
 from commands.gotopoint import GoToPoint
@@ -32,6 +34,7 @@ class RobotContainer:
         # The robot's subsystems are defined here
         self.drivetrain = Drivetrain()
         self.arm = Arm()
+        self.stopwatch = Stopwatch()
 
         # Assume that joystick "j0" is plugged into channnel 0
         self.j0 = CommandXboxController(0)
@@ -109,9 +112,13 @@ class RobotContainer:
 
     def getAutonomousCommand(self):
         # - exercise B1: can you make a command to drive 20 inches forward at max speed?
+        startStopwatch = InstantCommand(self.stopwatch.start)
+        goTo40inch = GoToPoint(40, 0, self.drivetrain)
+        stopStopwatch = InstantCommand(self.stopwatch.stop)
 
         # - exercise B2: can you return this command instead of None?
-        return None
+        autoCommand = startStopwatch.andThen(goTo40inch).andThen(stopStopwatch)
+        return autoCommand
 
     def teleopInit(self):
         self.drivetrain.resetOdometry()
