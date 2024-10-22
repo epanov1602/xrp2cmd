@@ -49,11 +49,12 @@ class GoToPoint(commands2.Command):
             degreesRemaining = (targetDirection - currentDirection).degrees()
 
         # 3. now when we know the desired direction, we can compute the turn speed
-        rotateSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        rotateSpeed = 1.0
+        slowDownAtEndRotSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        if rotateSpeed > slowDownAtEndRotSpeed:
+            rotateSpeed = slowDownAtEndRotSpeed
         if rotateSpeed < AimToDirectionConstants.kMinTurnSpeed:
             rotateSpeed = AimToDirectionConstants.kMinTurnSpeed  # but not too small
-        if rotateSpeed > 1:
-            rotateSpeed = 1  # and not above 1.0
 
         # 4. if we are pointing in a very different direction, turn towards where we need to be without driving towards
         if degreesRemaining > 60:
@@ -65,10 +66,11 @@ class GoToPoint(commands2.Command):
 
         # 5. but if not too different, then we can drive while turning
         distanceRemaining = self.targetPosition.distance(currentPoint)
-        if not self.stopAtEnd:
-            translateSpeed = 1  # if we don't plan to stop at the end, go at max speed
-        else:
-            translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining  # else, proportional
+        translateSpeed = 1  # if we don't plan to stop at the end, go at max speed
+        if self.stopAtEnd:
+            slowDownAtEndTransSpeed = GoToPointConstants.kPTranslate * distanceRemaining  # else, proportional
+            if translateSpeed > slowDownAtEndTransSpeed:
+                translateSpeed = slowDownAtEndTransSpeed
         if translateSpeed < GoToPointConstants.kMinTranslateSpeed:
             translateSpeed = GoToPointConstants.kMinTranslateSpeed
         if translateSpeed > 1:

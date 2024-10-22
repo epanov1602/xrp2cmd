@@ -38,11 +38,12 @@ class AimToDirection(commands2.Command):
         degreesRemaining = rotationRemaining.degrees()
 
         # 2. proportional control: if we are almost finished turning, use slower turn speed (to avoid overshooting)
-        turnSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        turnSpeed = self.maxSpeed
+        slowdownAtEndSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        if turnSpeed > slowdownAtEndSpeed:
+            turnSpeed = slowdownAtEndSpeed
         if turnSpeed < AimToDirectionConstants.kMinTurnSpeed:
             turnSpeed = AimToDirectionConstants.kMinTurnSpeed  # but not too small
-        if turnSpeed > self.maxSpeed:
-            turnSpeed = self.maxSpeed  # and not above maxSpeed
 
         # 3. act on it! if target angle is on the right, turn right
         if degreesRemaining > 0:

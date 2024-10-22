@@ -112,12 +112,13 @@ class RobotContainer:
 
     def getAutonomousCommand(self):
         # - exercise B1: can you make a command to drive 20 inches forward at max speed?
+        resetOdometry = InstantCommand(self.drivetrain.resetOdometry)
         startStopwatch = InstantCommand(self.stopwatch.start)
-        goTo40inch = GoToPoint(40, 0, self.drivetrain)
+        goTo40inch = GoToPoint(40, 0, self.drivetrain, False)
         stopStopwatch = InstantCommand(self.stopwatch.stop)
 
         # - exercise B2: can you return this command instead of None?
-        autoCommand = startStopwatch.andThen(goTo40inch).andThen(stopStopwatch)
+        autoCommand = resetOdometry.andThen(startStopwatch).andThen(goTo40inch).andThen(stopStopwatch)
         return autoCommand
 
     def teleopInit(self):
