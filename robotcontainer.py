@@ -34,7 +34,7 @@ class RobotContainer:
         # The robot's subsystems are defined here
         self.drivetrain = Drivetrain()
         self.arm = Arm()
-        self.stopwatch = Stopwatch()
+        self.stopwatch = Stopwatch("race-time")
 
         # Assume that joystick "j0" is plugged into channnel 0
         self.j0 = CommandXboxController(0)
