@@ -10,18 +10,21 @@ import commands2
 import wpilib
 import xrp
 
-from wpilib.drive import DifferentialDrive
 from wpimath.kinematics import DifferentialDriveOdometry
 from wpimath.geometry import Rotation2d, Pose2d, Translation2d
-from wpilib import SmartDashboard
+from wpilib import SmartDashboard, Timer
 
 
 class Drivetrain(commands2.Subsystem):
     kCountsPerRevolution = 585.0
     kWheelDiameterInch = 2.3622
+    kMinProductiveEffort = 0.4  # control signal smaller than this might not result in XRP motor spinning
 
-    def __init__(self) -> None:
+    def __init__(self, maxAcceleration: float = 999) -> None:
         super().__init__()
+        self.leftSpeed = 0
+        self.rightSpeed = 0
+        self.maxAcc = maxAcceleration
 
         # The XRP has the left and right motors set to
         # PWM channels 0 and 1 respectively
@@ -51,7 +54,6 @@ class Drivetrain(commands2.Subsystem):
         self.resetGyro()
 
         # Set up the differential drive controller and differential drive odometry
-        self.drive = DifferentialDrive(self.leftMotor, self.rightMotor)
         self.odometry = DifferentialDriveOdometry(
             Rotation2d.fromDegrees(self.getGyroAngleZ()), self.getLeftDistanceInch(), self.getRightDistanceInch())
 
@@ -74,13 +76,28 @@ class Drivetrain(commands2.Subsystem):
         :param rot: the commanded rotation
         :param square: make the inputs a little smoother around zero (helps human operators)
         """
-        self.drive.arcadeDrive(fwd, rot, square)
+        # 1. compute the desired wheel speeds, without accounting for max acceleration
+        if square:
+            rot = rot * abs(rot)
+            fwd = fwd * abs(fwd)
+        desiredLeftSpeed, desiredRightSpeed = _to_left_right_speeds(fwd, rot)
+
+        # 2. adjust the desired wheel speeds for allowed max acceleration (to avoid skidding on the floor)
+        self.leftSpeed = _clip(desiredLeftSpeed, self.leftSpeed - self.maxAcc, self.leftSpeed + self.maxAcc)
+        self.rightSpeed = _clip(desiredRightSpeed, self.rightSpeed - self.maxAcc, self.rightSpeed + self.maxAcc)
+
+        # 3. set the motors to proceed with those speeds
+        t = Timer.getFPGATimestamp()
+        self.leftMotor.set(_protect_from_min_motor_speed(self.leftSpeed, t))
+        self.rightMotor.set(_protect_from_min_motor_speed(self.rightSpeed, t))
 
     def stop(self) -> None:
         """
-        Stop the drivetrain motors
+        Stop the drivetrain motors immediately, without respecting maxAcceleration
         """
-        self.drive.arcadeDrive(0, 0)
+        self.leftSpeed = 0
+        self.rightSpeed = 0
+        self.arcadeDrive(0, 0)
 
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
@@ -181,3 +198,33 @@ class Drivetrain(commands2.Subsystem):
 
     def resetPose(self, pose: Pose2d = Pose2d()) -> None:
         self.resetOdometry(pose)
+
+def _clip(x, minimum, maximum):
+    if x > maximum:
+        x = maximum
+    if x < minimum:
+        x = minimum
+    return x
+
+def _protect_from_min_motor_speed(speed, t, min_motor_speed=Drivetrain.kMinProductiveEffort, period_seconds=0.5):
+    # 1. if speed is zero or above min_motor_speed, just use that
+    if speed == 0 or abs(speed) > min_motor_speed:
+        return speed
+    # 2. if speed is smaller than min_motor speed:
+    #  - use +-min_motor_speed but only a certain % of the time
+    #  - and use zero speed otherwise
+    probability = t / period_seconds
+    probability = probability - int(probability)  # floating point number between 0.0 and 0.999999
+    if min_motor_speed * probability < abs(speed):
+        return math.copysign(min_motor_speed, speed)
+    else:
+        return 0
+
+def _to_left_right_speeds(fwd, rot):
+    rot = _clip(rot, -1.0, +1.0)
+    max_fwd = 1.0 - abs(rot)  # maximum achievable forward effort without spinning one of two motors at >100%
+    fwd = _clip(fwd, -max_fwd, +max_fwd)
+    left = fwd - rot
+    right = fwd + rot
+    # we also need to protect them from going under min motor speed
+    return left, right

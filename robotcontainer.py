@@ -9,7 +9,7 @@ import typing
 import wpilib
 import commands2
 from commands2.button import CommandXboxController
-from commands2 import InstantCommand
+from commands2 import InstantCommand, WaitCommand
 
 from commands.arcadedrive import ArcadeDrive
 from commands.drivedistance import DriveDistance
@@ -34,9 +34,10 @@ class RobotContainer:
         # The robot's subsystems are defined here
         self.drivetrain = Drivetrain()
         self.arm = Arm()
+
         self.stopwatch = Stopwatch("race-time")
 
-        # Assume that joystick "j0" is plugged into channnel 0
+        # Assume that joystick "j0" is plugged into channel 0
         self.j0 = CommandXboxController(0)
         # (you can also use CommandPS4Controller or CommandJoystick, if you prefer those)
 
@@ -111,14 +112,17 @@ class RobotContainer:
         self.drivetrain.setDefaultCommand(drive)
 
     def getAutonomousCommand(self):
-        # - exercise B1: can you make a command to drive 20 inches forward at max speed?
         resetOdometry = InstantCommand(self.drivetrain.resetOdometry)
         startStopwatch = InstantCommand(self.stopwatch.start)
-        goTo40inch = GoToPoint(40, 0, self.drivetrain, False)
         stopStopwatch = InstantCommand(self.stopwatch.stop)
 
-        # - exercise B2: can you return this command instead of None?
-        autoCommand = resetOdometry.andThen(startStopwatch).andThen(goTo40inch).andThen(stopStopwatch)
+        # a little race with stopwatch
+        autoCommand = (resetOdometry
+                       .andThen(startStopwatch)
+                       .andThen(GoToPoint(20, 0, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(20, 20, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(stopStopwatch))
+
         return autoCommand
 
     def teleopInit(self):
