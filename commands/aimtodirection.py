@@ -20,9 +20,9 @@ class AimToDirectionConstants:
 
 
 class AimToDirection(commands2.Command):
-    def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, maxspeed: float = 1) -> None:
+    def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, speed: float = 1) -> None:
         self.targetDegrees = degrees
-        self.maxSpeed = min((1.0, abs(maxspeed)))
+        self.maxSpeed = min((1.0, abs(speed)))
         self.targetDirection = None
         self.drivetrain = drivetrain
         self.addRequirements(drivetrain)
