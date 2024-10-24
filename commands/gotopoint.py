@@ -68,7 +68,7 @@ class GoToPoint(commands2.Command):
 
         # 3. now when we know the desired direction, we can compute the turn speed
         rotateSpeed = abs(self.speed)
-        proportionalRotateSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        proportionalRotateSpeed = AimToDirectionConstants.kP * abs(degreesRemaining)
         if rotateSpeed > proportionalRotateSpeed:
             rotateSpeed = proportionalRotateSpeed
 

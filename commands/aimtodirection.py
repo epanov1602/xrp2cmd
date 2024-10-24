@@ -13,7 +13,7 @@ from wpimath.geometry import Rotation2d
 
 
 class AimToDirectionConstants:
-    kPRotate = 0.002  # 0.002 is the default
+    kP = 0.002  # 0.002 is the default
     kMinTurnSpeed = 0.15  # turning slower than this is unproductive for the motor (might not even spin)
     kAngleToleranceDegrees = 3.0  # plus minus 3 degrees is "close enough" (for a cheap XRP robot)
     kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
@@ -41,7 +41,7 @@ class AimToDirection(commands2.Command):
 
         # 2. proportional control: if we are almost finished turning, use slower turn speed (to avoid overshooting)
         turnSpeed = self.maxSpeed
-        proportionalSpeed = AimToDirectionConstants.kPRotate * abs(degreesRemaining)
+        proportionalSpeed = AimToDirectionConstants.kP * abs(degreesRemaining)
         if turnSpeed > proportionalSpeed:
             turnSpeed = proportionalSpeed
         if turnSpeed < AimToDirectionConstants.kMinTurnSpeed:
