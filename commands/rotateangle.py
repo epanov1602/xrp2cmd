@@ -10,8 +10,8 @@ from subsystems.drivetrain import Drivetrain
 
 class RotateAngle(commands2.Command):
     def __init__(self, speed: float, degrees: float, drivetrain: Drivetrain) -> None:
-        """Creates a new DriveDistance.
-        This command will drive your robot for a desired distance at a desired speed.
+        """Creates a new RotateAngle command.
+        This command will rotate your robot for a desired angle distance at a desired speed.
 
         :param speed:  The speed at which to turn (between -1.0 and 1.0 but not zero)
         :param degrees: The number of degrees the robot will turn, less than 180
@@ -35,7 +35,7 @@ class RotateAngle(commands2.Command):
 
     def execute(self) -> None:
         """Called every time the scheduler runs while the command is scheduled."""
-        self.drivetrain.arcadeDrive(0, self.speed)
+        self.drivetrain.arcadeDrive(0, rot=self.speed)
 
     def end(self, interrupted: bool) -> None:
         """Called once the command ends or is interrupted."""
