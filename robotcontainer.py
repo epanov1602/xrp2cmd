@@ -119,8 +119,10 @@ class RobotContainer:
         # a little race with stopwatch
         autoCommand = (resetOdometry
                        .andThen(startStopwatch)
-                       .andThen(GoToPoint(20, 0, self.drivetrain, 1.0, slowDownAtFinish=False))
-                       .andThen(GoToPoint(20, 20, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(25, 0, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(25, 25, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(0, 25, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(0, 0, self.drivetrain, 1.0, slowDownAtFinish=True))
                        .andThen(stopStopwatch))
 
         return autoCommand

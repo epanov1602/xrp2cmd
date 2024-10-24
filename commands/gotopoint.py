@@ -13,6 +13,7 @@ from commands.aimtodirection import AimToDirectionConstants
 from wpimath.geometry import Rotation2d, Translation2d
 from wpilib import SmartDashboard
 
+
 class GoToPointConstants:
     kPTranslate = 0.04
     kMinTranslateSpeed = 0.3  # moving forward slower than this is unproductive
@@ -98,7 +99,7 @@ class GoToPoint(commands2.Command):
         translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining
 
         # 1. have we reached the point where we are moving very slowly?
-        tooSlowNow = translateSpeed < 0.25 * GoToPointConstants.kMinTranslateSpeed and self.stop
+        tooSlowNow = translateSpeed < 0.125 * GoToPointConstants.kMinTranslateSpeed and self.stop
 
         # 2. did we overshoot?
         distanceFromInitialPosition = self.initialPosition.distance(currentPosition)
