@@ -11,11 +11,13 @@ import typing
 from subsystems.drivetrain import Drivetrain
 from wpimath.geometry import Rotation2d
 
+
 class AimToDirectionConstants:
-    kPRotate = 0.007  # 0.002 is the default
+    kPRotate = 0.002  # 0.002 is the default
     kMinTurnSpeed = 0.15  # turning slower than this is unproductive for the motor (might not even spin)
-    kAngleToleranceDegrees = 2.0  # plus minus 2 degrees is "close enough" (for XRP)
+    kAngleToleranceDegrees = 3.0  # plus minus 3 degrees is "close enough" (for a cheap XRP robot)
     kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
+
 
 class AimToDirection(commands2.Command):
     def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, maxspeed: float = 1) -> None:
@@ -65,5 +67,5 @@ class AimToDirection(commands2.Command):
             turnVelocity = self.drivetrain.getGyroVelocityZ()
             print(f"AimToDirection: possible stopping velocity {turnVelocity}")
             if abs(turnVelocity) < AimToDirectionConstants.kAngleVelocityToleranceDegreesPerSec:
-                print(f"AimToDirection: finished with {turnVelocity}")
+                print(f"AimToDirection: finished with velocity {turnVelocity}")
                 return True

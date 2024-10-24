@@ -14,7 +14,7 @@ from wpimath.geometry import Rotation2d, Translation2d
 from wpilib import SmartDashboard
 
 class GoToPointConstants:
-    kPTranslate = 0.1
+    kPTranslate = 0.04
     kMinTranslateSpeed = 0.3  # moving forward slower than this is unproductive
     kOversteerAdjustment = 0.5
 
@@ -25,7 +25,7 @@ class GoToPoint(commands2.Command):
         self.stop = slowDownAtFinish
         self.initialDirection = None
         self.initialDistance = None
-        self.finishedInitialRotation = False
+        self.pointingInGoodDirection = False
         self.drivetrain = drivetrain
         self.addRequirements(drivetrain)
 
@@ -34,7 +34,7 @@ class GoToPoint(commands2.Command):
         initialDirection = self.targetPosition - self.initialPosition
         self.initialDirection = Rotation2d(initialDirection.x, initialDirection.y)
         self.initialDistance = self.initialPosition.distance(self.targetPosition)
-        self.finishedInitialRotation = False
+        self.pointingInGoodDirection = False
 
     def execute(self):
         # 1. to which direction we should be pointing?
@@ -45,21 +45,22 @@ class GoToPoint(commands2.Command):
         targetDirection = Rotation2d(targetDirectionVector.x, targetDirectionVector.y)
         degreesRemaining = (targetDirection - currentDirection).degrees()
 
-        # 2. if we are pointing in a very wrong direction, rotate away without moving
-        if degreesRemaining > 45 and not self.finishedInitialRotation:
-            self.drivetrain.arcadeDrive(0.0, max(self.speed, AimToDirectionConstants.kMinTurnSpeed))
+        # 2. if we are pointing in a very wrong direction (more than 45 degrees away), rotate away without moving
+        if degreesRemaining > 45 and not self.pointingInGoodDirection:
+            self.drivetrain.arcadeDrive(0.0, self.speed)
             return
-        elif degreesRemaining < -45 and not self.finishedInitialRotation:
-            self.drivetrain.arcadeDrive(0.0, -max(self.speed, AimToDirectionConstants.kMinTurnSpeed))
+        elif degreesRemaining < -45 and not self.pointingInGoodDirection:
+            self.drivetrain.arcadeDrive(0.0, self.speed)
             return
         else:
-            self.finishedInitialRotation = True
+            self.pointingInGoodDirection = True
 
         # 3. otherwise, drive forward but with an oversteer adjustment
         if GoToPointConstants.kOversteerAdjustment != 0:
             deviationFromInitial = (targetDirection - self.initialDirection).degrees()
             adjustment = GoToPointConstants.kOversteerAdjustment * deviationFromInitial
-            adjustment = min((22.5, max((-22.5, adjustment))))  # avoid oscillations
+            if adjustment > 20: adjustment = 20  # avoid oscillations by capping the adjustment at 20 degrees
+            if adjustment < -20: adjustment = -20  # avoid oscillations by capping the adjustment at 20 degrees
             targetDirection = targetDirection.rotateBy(Rotation2d.fromDegrees(adjustment))
             degreesRemaining = (targetDirection - currentDirection).degrees()
 
@@ -95,11 +96,12 @@ class GoToPoint(commands2.Command):
         currentPosition = currentPose.translation()
         distanceRemaining = self.targetPosition.distance(currentPosition)
         translateSpeed = GoToPointConstants.kPTranslate * distanceRemaining
-        #if translateSpeed < 0.5 * GoToPointConstants.kMinTranslateSpeed:
-        #    return True  # we reached the point where we are moving very slow, time to stop
+
+        # 1. have we reached the point where we are moving very slowly?
+        tooSlowNow = translateSpeed < 0.25 * GoToPointConstants.kMinTranslateSpeed and self.stop
 
         # 2. did we overshoot?
         distanceFromInitialPosition = self.initialPosition.distance(currentPosition)
-        if distanceFromInitialPosition >= self.initialDistance:
+        if distanceFromInitialPosition >= self.initialDistance or tooSlowNow:
             SmartDashboard.putNumber("distance-to-target", self.targetPosition.distance(currentPosition))
             return True  # we overshot

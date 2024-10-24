@@ -210,7 +210,7 @@ def _protect_from_min_motor_speed(speed, t, min_motor_speed=Drivetrain.kMinProdu
     # 1. if speed is zero or above min_motor_speed, just use that
     if speed == 0 or abs(speed) > min_motor_speed:
         return speed
-    # 2. if speed is smaller than min_motor speed:
+    # 2. if speed is smaller than min_motor_speed, do something else:
     #  - use +-min_motor_speed but only a certain % of the time
     #  - and use zero speed otherwise
     probability = t / period_seconds
