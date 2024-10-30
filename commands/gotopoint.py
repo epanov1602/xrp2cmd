@@ -15,7 +15,7 @@ from wpilib import SmartDashboard
 
 
 class GoToPointConstants:
-    kPTranslate = 0.04
+    kPTranslate = 0.067
     kMinTranslateSpeed = 0.3  # moving forward slower than this is unproductive
     kOversteerAdjustment = 0.5
 

@@ -5,6 +5,8 @@
 #
 
 import typing
+import cv2
+import pupil_apriltags as apriltags
 
 import wpilib
 import commands2
@@ -16,11 +18,14 @@ from commands.drivedistance import DriveDistance
 from commands.rotateangle import RotateAngle
 
 from subsystems.drivetrain import Drivetrain
+from subsystems.cvcamera import CVCamera
 from subsystems.arm import Arm
 from subsystems.stopwatch import Stopwatch
 
+from commands.aimtoobject import AimToObject
 from commands.aimtodirection import AimToDirection
 from commands.gotopoint import GoToPoint
+from helpers import detection
 
 class RobotContainer:
     """
@@ -34,8 +39,20 @@ class RobotContainer:
         # The robot's subsystems are defined here
         self.drivetrain = Drivetrain()
         self.arm = Arm()
-
         self.stopwatch = Stopwatch("race-time")
+
+        ## 1. detector for faces?
+        ## face_detector_model = cv2.CascadeClassifier('resources/haarcascade_frontalface_default.xml')
+        ## def face_detector(frame, tracker, previous_bbox):
+        ##    return detection.detect_biggest_face(face_detector_model, frame, previous_bbox, tracker)
+
+        ## 2. detector for apriltags?
+        apriltag_detector_model = apriltags.Detector(families="tag36h11", quad_sigma=0.2)
+        def apriltag_detector(frame, tracker, previous_bbox, only_these_ids=None):
+            return detection.detect_biggest_apriltag(apriltag_detector_model, frame, only_these_ids, tracker)
+
+        self.camera = CVCamera(80, 60, 10, detector=apriltag_detector)
+        self.camera.start()
 
         # Assume that joystick "j0" is plugged into channel 0
         self.j0 = CommandXboxController(0)
@@ -47,12 +64,14 @@ class RobotContainer:
         """Use this method to define your button->command mappings"""
 
         # 1. Here is a command to drive forward 10 inches with speed 0.9
-        forward10inches = DriveDistance(speed=0.9, inches=10, drivetrain=self.drivetrain)
+        forward30inches = GoToPoint(x=30, y=0, drivetrain=self.drivetrain)
         # let's bind this command to button "y" on the joystick
-        self.j0.y().onTrue(forward10inches)
+        self.j0.y().onTrue(forward30inches)
 
         # and here is a command to drive back 10 inches
-        back10inches = DriveDistance(speed=-0.7, inches=10, drivetrain=self.drivetrain)
+
+        back30inches = GoToPoint(x=-30, y=0, drivetrain=self.drivetrain)
+        self.j0.a().onTrue(back30inches)
 
         #  - exercise 1: can you hook this command to button "a" on the joystick?
 
@@ -75,11 +94,12 @@ class RobotContainer:
 
 
         # 4. A command to turn right 45 degrees *but* we can add a 5 second timeout to it
-        right45degrees = RotateAngle(speed=0.6, degrees=+45, drivetrain=self.drivetrain)
-        right45degrees_timeout5s = right45degrees.withTimeout(5)
-        self.j0.rightBumper().onTrue(right45degrees_timeout5s)
+        right45degrees = AimToDirection(degrees=-45, drivetrain=self.drivetrain)
+        self.j0.rightBumper().onTrue(right45degrees)
 
         # exercise 4: can you make a command to turn the robot left by 45 degrees and with 3 second timeout?
+        left45degrees = AimToDirection(degrees= 45, drivetrain=self.drivetrain)
+        self.j0.leftBumper().onTrue(left45degrees)
 
         # exercise 4b: can you bind this command to the left bumper button of the joystick?
 
@@ -110,6 +130,8 @@ class RobotContainer:
         # ("by default" means it will stop running when some other command is asked
         # to use drivetrain, and will restart running after that other command is done)
         self.drivetrain.setDefaultCommand(drive)
+
+        self.j0.button(1).onTrue(AimToObject(self.camera, self.drivetrain))
 
     def getAutonomousCommand(self):
         resetOdometry = InstantCommand(self.drivetrain.resetOdometry)

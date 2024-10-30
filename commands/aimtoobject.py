@@ -1,41 +1,40 @@
-#
-# Copyright (c) FIRST and other WPILib contributors.
-# Open Source Software; you can modify and/or share it under the terms of
-# the WPILib BSD license file in the root directory of this project.
-#
-
-from __future__ import annotations
 import commands2
 import typing
 
+from commands.aimtodirection import AimToDirectionConstants
+
 from subsystems.drivetrain import Drivetrain
+from subsystems.cvcamera import CVCamera
 from wpimath.geometry import Rotation2d
 
-
-class AimToDirectionConstants:
-    kP = 0.004  # 0.002 is the default
-    kMinTurnSpeed = 0.15  # turning slower than this is unproductive for the motor (might not even spin)
-    kAngleToleranceDegrees = 3.0  # plus minus 3 degrees is "close enough" (for a cheap XRP robot)
-    kAngleVelocityToleranceDegreesPerSec = 50  # velocity under 100 degrees/second is considered "stopped"
-
-
-class AimToDirection(commands2.Command):
-    def __init__(self, degrees: float | typing.Callable[[], float], drivetrain: Drivetrain, speed: float = 1) -> None:
-        self.targetDegrees = degrees
+class AimToObject(commands2.Command):
+    def __init__(self, camera: CVCamera, drivetrain: Drivetrain, speed=1.0, seek_speed=0.15) -> None:
+        self.targetCamera = camera
+        self.seekSpeed = seek_speed
         self.maxSpeed = min((1.0, abs(speed)))
         self.targetDirection = None
+        self.minObjectIndex = None
         self.drivetrain = drivetrain
         self.addRequirements(drivetrain)
 
     def initialize(self):
-        if callable(self.targetDegrees):
-            self.targetDirection = Rotation2d.fromDegrees(self.targetDegrees())
-        else:
-            self.targetDirection = Rotation2d.fromDegrees(self.targetDegrees)
+        self.targetDirection = None
+        t, index, center, size = self.targetCamera.get_detected_object()
+        self.minObjectIndex = index + 1  # newly detected objects must have index above this
 
     def execute(self):
-        # 1. how many degrees are left to turn?
         currentDirection = self.drivetrain.getHeading()
+
+        # 0. if we don't know where to turn, look at the camera to see if any new object is detected
+        if self.targetDirection is None:
+            t, index, center, size = self.targetCamera.get_detected_object()
+            if index <= self.minObjectIndex or center[0] is None:
+                self.drivetrain.arcadeDrive(0, 0)
+                return  # no new object detected, so stop and maybe look later
+            # otherwise we have an object: compute how many degrees to turn towards that object
+            self.targetDirection = currentDirection.rotateBy(Rotation2d.fromDegrees(-center[0]))
+
+        # 1. how many degrees are left to turn?
         rotationRemaining = self.targetDirection - currentDirection
         degreesRemaining = rotationRemaining.degrees()
 
@@ -59,6 +58,8 @@ class AimToDirection(commands2.Command):
         self.drivetrain.arcadeDrive(0, 0)
 
     def isFinished(self) -> bool:
+        if self.targetDirection is None:
+            return False  # not finished yet
         currentDirection = self.drivetrain.getHeading()
         rotationRemaining = self.targetDirection - currentDirection
         degreesRemaining = rotationRemaining.degrees()

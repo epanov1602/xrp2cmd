@@ -206,7 +206,7 @@ def _clip(x, minimum, maximum):
         x = minimum
     return x
 
-def _protect_from_min_motor_speed(speed, t, min_motor_speed=Drivetrain.kMinProductiveEffort, period_seconds=0.5):
+def _protect_from_min_motor_speed(speed, t, min_motor_speed=Drivetrain.kMinProductiveEffort, period_seconds=0.25):
     # 1. if speed is zero or above min_motor_speed, just use that
     if speed == 0 or abs(speed) > min_motor_speed:
         return speed

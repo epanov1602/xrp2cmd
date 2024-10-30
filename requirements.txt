@@ -1,5 +1,7 @@
+opencv-python
 robotpy
 robotpy-commands-v2
 robotpy-halsim-gui
 robotpy-xrp
 wpilib
+pupil-apriltags
