@@ -22,7 +22,7 @@ from subsystems.cvcamera import CVCamera
 from subsystems.arm import Arm
 from subsystems.stopwatch import Stopwatch
 
-from commands.aimtoobject import AimToObject
+from commands.followobject import FollowObject
 from commands.aimtodirection import AimToDirection
 from commands.gotopoint import GoToPoint
 from helpers import detection
@@ -131,7 +131,7 @@ class RobotContainer:
         # to use drivetrain, and will restart running after that other command is done)
         self.drivetrain.setDefaultCommand(drive)
 
-        self.j0.button(1).onTrue(AimToObject(self.camera, self.drivetrain))
+        self.j0.button(1).onTrue(FollowObject(self.camera, self.drivetrain))
 
     def getAutonomousCommand(self):
         resetOdometry = InstantCommand(self.drivetrain.resetOdometry)

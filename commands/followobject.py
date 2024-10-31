@@ -8,6 +8,7 @@ from subsystems.drivetrain import Drivetrain
 from subsystems.cvcamera import CVCamera
 from wpimath.geometry import Rotation2d
 
+
 class StopWhen:
     def __init__(self, maxY=999, minY=-999, maxSize=9999, aimingToleranceDegrees=4):
         self.maxY = maxY
@@ -16,7 +17,7 @@ class StopWhen:
         self.aimingToleranceDegrees = aimingToleranceDegrees
 
 
-class AimToObject(commands2.Command):
+class FollowObject(commands2.Command):
     ANGLE_TOLERANCE = 25  # if pointing more than this away, do not move forward
 
     def __init__(self, camera: CVCamera, drivetrain: Drivetrain, fwd_step_seconds=0.25, stop_when: StopWhen=None):
@@ -66,7 +67,7 @@ class AimToObject(commands2.Command):
     def makeSubcommandToGoInTargetDirection(self):
         degreesFromTarget = (self.drivetrain.getHeading() - self.targetDirection).degrees()
 
-        if abs(degreesFromTarget) > AimToObject.ANGLE_TOLERANCE or self.fwdStepSeconds == 0:
+        if abs(degreesFromTarget) > FollowObject.ANGLE_TOLERANCE or self.fwdStepSeconds == 0:
             # rotate if robot is pointing too far from the object or if we aren't supposed to make steps forward
             self.subcommand = AimToDirection(self.targetDirection.degrees(), self.drivetrain)
         else:
