@@ -32,6 +32,8 @@ class CVCamera(commands2.Subsystem):
         self.last_detected_bbox = None
         self.last_detected_frame = None
 
+        self.last_valid_detected_center_degrees = (None, None)
+
         self.frame = None
         self.frame_index = 0
 
@@ -119,6 +121,7 @@ class CVCamera(commands2.Subsystem):
                 self.horizontal_fov_degrees * (w / frame_width),
                 self.vertical_fov_degrees * (h / frame_height),
             )
+            self.last_valid_detected_center_degrees = self.last_detected_center_degrees
             if draw:
                 size = max(self.last_detected_size_degrees)
                 text = "x:{:.0f}, y:{:.0f}, size: {:.0f}".format(

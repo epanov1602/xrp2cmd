@@ -51,7 +51,7 @@ class RobotContainer:
         def apriltag_detector(frame, tracker, previous_bbox, only_these_ids=None):
             return detection.detect_biggest_apriltag(apriltag_detector_model, frame, only_these_ids, tracker)
 
-        self.camera = CVCamera(80, 60, 10, detector=apriltag_detector)
+        self.camera = CVCamera(80, 60, 10) #, detector=apriltag_detector)
         self.camera.start()
 
         # Assume that joystick "j0" is plugged into channel 0
@@ -141,9 +141,11 @@ class RobotContainer:
         # a little race with stopwatch
         autoCommand = (resetOdometry
                        .andThen(startStopwatch)
-                       .andThen(GoToPoint(25, 0, self.drivetrain, 1.0, slowDownAtFinish=False))
-                       .andThen(GoToPoint(25, 25, self.drivetrain, 1.0, slowDownAtFinish=False))
-                       .andThen(GoToPoint(0, 25, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(35, 0, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(40.5, 5, self.drivetrain, 1.0, slowDownAtFinish=False))
+                       .andThen(GoToPoint(37, 15, self.drivetrain, 1.0, slowDownAtFinish=True))
+
+                       .andThen(GoToPoint(-2, 39, self.drivetrain, 1.0, slowDownAtFinish=True))
                        .andThen(GoToPoint(0, 0, self.drivetrain, 1.0, slowDownAtFinish=True))
                        .andThen(stopStopwatch))
 
