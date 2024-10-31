@@ -10,7 +10,17 @@ from wpimath.geometry import Rotation2d
 
 
 class StopWhen:
+    """
+    How close is "close enough", for a given object-following command?
+    """
     def __init__(self, maxY=999, minY=-999, maxSize=9999, aimingToleranceDegrees=4):
+        """
+        When to stop object following
+        :param maxY: if the "Y" (pitch) of the object is above this, finish
+        :param minY: if the "Y" (pitch) of the object is below this, finish
+        :param maxSize: if the angular size of the object is greater than this, finish
+        :param aimingToleranceDegrees: if we aren't approaching but simply aiming (fwd_step=0), how close is enough?
+        """
         self.maxY = maxY
         self.minY = minY
         self.maxSize = maxSize
@@ -18,7 +28,7 @@ class StopWhen:
 
 
 class FollowObject(commands2.Command):
-    ANGLE_TOLERANCE = 25  # if pointing more than this away, do not move forward
+    ANGLE_TOLERANCE = 30  # if pointing further away than this, do not move forward (but rotate to the object first)
 
     def __init__(self, camera: CVCamera, drivetrain: Drivetrain, fwd_step_seconds=0.25, stop_when: StopWhen=None):
         super().__init__()
